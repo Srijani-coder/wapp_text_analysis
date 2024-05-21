@@ -7,21 +7,21 @@ from nltk.sentiment import SentimentIntensityAnalyzer
 import re
 import time
 import os
+import subprocess
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
-import gdown
-import subprocess
 
 # Google Drive URL to the model
-model_url = "https://drive.google.com/uc?id=1BSz_c8IFvECFhsKCEenKw-_zCiDejIPZ"  # Update with the actual ID
+model_url = "https://drive.google.com/uc?id=1BSz_c8IFvECFhsKCEenKw-_zCiDejIPZ"  # Replace YOUR_MODEL_ID with the actual ID
 
 @st.cache_resource
 def load_model_and_tokenizer():
     # Download the model from Google Drive
-    model_path = "depression_text_model.pt"
+    model_path = "depression_model.pth"
     if not os.path.exists(model_path):
+        import gdown
         gdown.download(model_url, model_path, quiet=False)
     
     tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
@@ -65,21 +65,17 @@ def analyze(df, tokenizer, model):
     return depressed_count / len(df)
 
 def collect_whatsapp_chats():
+    # Run the setup script to install geckodriver
+    result = subprocess.run(["bash", "setup.sh"], capture_output=True, text=True)
+    if result.returncode != 0:
+        st.write(result.stderr)
+        raise RuntimeError("Failed to install geckodriver")
+    st.write(result.stdout)
+
     firefox_options = Options()
     firefox_options.add_argument("--headless")
-    firefox_options.add_argument("--no-sandbox")
-    firefox_options.add_argument("--disable-dev-shm-usage")
-    firefox_options.add_argument("--disable-gpu")
 
-    # Ensure geckodriver is available
     driver_path = "/usr/local/bin/geckodriver"
-    if not os.path.exists(driver_path):
-        st.write("Installing geckodriver...")
-        result = subprocess.run(["bash", "setup.sh"], capture_output=True, text=True)
-        if result.returncode != 0:
-            st.write(result.stderr)
-            raise RuntimeError("Failed to install geckodriver")
-    
     driver = webdriver.Firefox(service=Service(driver_path), options=firefox_options)
     
     driver.get('https://web.whatsapp.com')
@@ -103,8 +99,8 @@ def collect_whatsapp_chats():
         messages = driver.find_elements(By.CSS_SELECTOR, 'div.message-in, div.message-out')
         for message in messages:
             message_text = message.find_element(By.CSS_SELECTOR, 'span.selectable-text').text
-            direction = "Sent" if 'message-out' in message.get_attribute('class') else "Received"
-            timestamp = message.find_element(By.CSS_SELECTOR, 'span.copyable-text').get_attribute('data-pre-plain-text').split('] ')[0][1:]
+            direction = "Sent" if 'message-out' in message.getAttribute('class') else "Received"
+            timestamp = message.find_element(By.CSS_SELECTOR, 'span.copyable-text').getAttribute('data-pre-plain-text').split('] ')[0][1:]
             all_messages.append({
                 'timestamp': timestamp,
                 'sender': contact_name if direction == "Received" else "Me",
