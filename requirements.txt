@@ -7,6 +7,6 @@ nltk
 matplotlib
 webdriver-manager
 chromium
-chromium-driver
+chromium-chromedriver
 gdown
 
