@@ -7,4 +7,6 @@ nltk
 matplotlib
 webdriver-manager
 gdown
+wget
+tar
 

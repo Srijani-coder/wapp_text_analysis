@@ -15,12 +15,12 @@ import gdown
 import subprocess
 
 # Google Drive URL to the model
-model_url = "https://drive.google.com/uc?id=1BSz_c8IFvECFhsKCEenKw-_zCiDejIPZ"  # Updated with the actual ID
+model_url = "https://drive.google.com/uc?id=1BSz_c8IFvECFhsKCEenKw-_zCiDejIPZ"  # Update with the actual ID
 
 @st.cache_resource
 def load_model_and_tokenizer():
     # Download the model from Google Drive
-    model_path = "depression_model.pth"
+    model_path = "depression_text_model.pt"
     if not os.path.exists(model_path):
         gdown.download(model_url, model_path, quiet=False)
     
