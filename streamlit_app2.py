@@ -12,14 +12,21 @@ from selenium import webdriver
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
+import gdown
 
 # Google Drive URL to the model
-model_url = "https://drive.google.com/uc?id=1BSz_c8IFvECFhsKCEenKw-_zCiDejIPZ"  # Replace YOUR_MODEL_ID with the actual ID
+model_url = "https://drive.google.com/uc?id=1BSz_c8IFvECFhsKCEenKw-_zCiDejIPZ"  
 
+def setup_geckodriver():
+    result = subprocess.run(["bash", "setup.sh"], capture_output=True, text=True)
+    if result.returncode != 0:
+        st.write(result.stderr)
+        raise RuntimeError("Failed to install geckodriver")
+    return result
 @st.cache_resource
 def load_model_and_tokenizer():
     # Download the model from Google Drive
-    model_path = "depression_model.pth"
+    model_path = "depression_text_model.pt"
     if not os.path.exists(model_path):
         import gdown
         gdown.download(model_url, model_path, quiet=False)
@@ -66,10 +73,7 @@ def analyze(df, tokenizer, model):
 
 def collect_whatsapp_chats():
     # Run the setup script to install geckodriver
-    result = subprocess.run(["bash", "setup.sh"], capture_output=True, text=True)
-    if result.returncode != 0:
-        st.write(result.stderr)
-        raise RuntimeError("Failed to install geckodriver")
+    result = setup_geckodriver()
     st.write(result.stdout)
 
     firefox_options = Options()
