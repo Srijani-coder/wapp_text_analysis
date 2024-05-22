@@ -18,11 +18,14 @@ import gdown
 model_url = "https://drive.google.com/uc?id=1BSz_c8IFvECFhsKCEenKw-_zCiDejIPZ"  
 
 def setup_geckodriver():
-    result = subprocess.run(["bash", "setup.sh"], capture_output=True, text=True)
+    subprocess.run(["chmod", "+x", "setup.sh"], check=True)
+    # Run setup.sh
+    result = subprocess.run(["./setup.sh"], capture_output=True, text=True)
     if result.returncode != 0:
         st.write(result.stderr)
         raise RuntimeError("Failed to install geckodriver")
-    return result
+    else:
+        st.write("Geckodriver installed successfully")
 @st.cache_resource
 def load_model_and_tokenizer():
     # Download the model from Google Drive
